@@ -4,6 +4,7 @@ library(tidyverse)
 library(shinydashboard)
 library(plotly)
 library(DT)
+library(scales)
 
 sidebar <- dashboardSidebar(
   br(),
@@ -13,12 +14,13 @@ sidebar <- dashboardSidebar(
   br(),
   
   sliderInput(inputId = "int",
-              label =  h5("Interest Rate"),
-              value = 3.5, min = 2, max = 25, step =  0.25),
+              label =  h4("Interest Rate"),
+              value = 3.5, min = 2, max = 15, step =  0.25),
   sliderInput(inputId = "loan",
-              label =  h5("Loan Amount"),
+              label =  h4("Loan Amount"),
               value = 100000, min = 50000, max = 200000, step = 5000),
-  radioButtons(inputId = "term", label = "Term", choices = c("15 Year" = 15, "30 Year" = 30), selected = 30)
+  radioButtons(inputId = "term", label = h4("Term"),
+               choices = c("15 Year" = 15, "30 Year" = 30), selected = 30)
   )
 
 
@@ -47,6 +49,10 @@ body <- dashboardBody(
     h4("Outstanding Balance  =  How you still owe on the loan")
   ),
   br(),
+  # 
+  # fluidRow(
+  #   DT::dataTableOutput("table")
+  # ),
   
   fluidRow(
     DT::dataTableOutput("table")
@@ -67,13 +73,15 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output) {
-  i <- reactive(input$int/1200)
+  i <- reactive(input$int/12/100)
   i2 <- reactive(input$int)
   v <- reactive((1+i())^-1)
   n <- reactive(as.numeric(input$term)*12)
   l <- reactive(input$loan)
   
-  pmt <- reactive({round(i()*l()/(1-v()^n()),2)})
+  pmt <- reactive({
+    i()*l()/(1-v()^n()) %>% round(2)
+  })
   
   #observe(print(pmt()))
   

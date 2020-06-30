@@ -3,10 +3,9 @@ library(tidyverse)
 library(DT)
 
 #i <- 15.8698;
-i <- 3.5
-i <- i/100/12
+i <- 3.5; i <- i/100/12
 
-n <- 30*12
+n <- 30; n <- n*12
 v <- (1+i)^-1
 l <- 100000
 pmt <- i*l/(1-v^n)
@@ -17,7 +16,7 @@ period <- 1:n
 intpmt <- c()
 prcpmt <- c()
 pv_dv_new <- l
-extra_pmt <- 100
+extra_pmt <- 0
 for(k in period){
   int_k <- pv_dv_new[k]*i    # INTEREST PAYMENT
   intpmt <- c(intpmt, int_k)
@@ -41,10 +40,18 @@ amort <- tibble(Year = yr,
                 `Cum Interest` = cumsum(intpmt),
                 principal = TotalPmt - interest,
                 `Cum Principal` = cumsum(principal),
-                balance = pv_dv_new[-1])
+                balance = pv_dv_new[-1],
+                ind = 1:n)
+amort <- amort %>% 
+  filter(interest >= 0)
 
 amort %>%
   filter(interest >= 0) %>% 
   datatable(options = list(pageLength = 100)) %>% 
   formatCurrency(columns = names(amort[!names(amort) %in% "Year"]))
 
+amort %>% 
+  pivot_longer(cols = c('principal','interest'),
+               names_to = 'break out', values_to = 'value') %>% 
+  ggplot(data = ., mapping = aes(x = ind, y = value, color=`break out`)) +
+  geom_line(size = 2)
